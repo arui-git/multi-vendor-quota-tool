@@ -2,6 +2,10 @@
 .claude/
 .playwright-mcp/
 
+# Node/打包
+node_modules/
+dist/
+
 # 临时/日志
 *.log
 *.tmp

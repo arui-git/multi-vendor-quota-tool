@@ -4,8 +4,8 @@ import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { list as listProviders, run as runProvider } from './providers/index.mjs';
 
-const PORT = 7788;
-const VERSION = '1.0.0.0';
+const PORT = Number(process.env.PORT) || 7788;
+const VERSION = '1.0.0';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const HTML = readFileSync(join(__dirname, 'index.html'), 'utf-8').replace('__VERSION__', VERSION);
 

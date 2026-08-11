@@ -1,0 +1,45 @@
+{
+  "name": "multi-vendor-quota-tool",
+  "version": "1.0.0",
+  "description": "多厂家 AI 套餐额度查询工具：智谱、OpenCode Go、阿里云百炼 Token Plan、火山方舟 Coding Plan、DeepSeek",
+  "main": "main.mjs",
+  "type": "module",
+  "author": "zhengyirui <1148810879@qq.com>",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win"
+  },
+  "build": {
+    "appId": "com.arui.multi-vendor-quota-tool",
+    "productName": "多厂家额度查询",
+    "files": [
+      "main.mjs",
+      "app.mjs",
+      "index.html",
+      "providers/**/*",
+      "!启动.bat",
+      "!*.png",
+      "!*.md"
+    ],
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    }
+  },
+  "devDependencies": {
+    "electron": "^43.3.0",
+    "electron-builder": "^26.15.3"
+  }
+}
