@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>多厂家额度查询</title>
+<style>
+  :root {
+    --bg: #f4f6fb;
+    --card: #ffffff;
+    --border: #e3e8f2;
+    --text: #1a2233;
+    --muted: #6b7689;
+    --primary: #2459e6;
+    --green: #22a06b;
+    --orange: #e08b00;
+    --red: #d04545;
+    --shadow: 0 1px 3px rgba(20,30,50,.08), 0 6px 20px rgba(20,30,50,.05);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 920px; margin: 0 auto; padding: 28px 18px 70px; }
+  h1 { font-size: 22px; margin: 0 0 4px; letter-spacing: -.3px; }
+  .sub { color: var(--muted); font-size: 13px; margin-bottom: 22px; }
+  .panel {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 14px; padding: 20px; box-shadow: var(--shadow); margin-bottom: 20px;
+  }
+  .row { display: flex; gap: 12px; align-items: flex-start; flex-wrap: wrap; }
+  .field { flex: 1 1 260px; }
+  .field.small { flex: 0 0 260px; }
+  label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 6px; font-weight: 600; }
+  .input-wrap { position: relative; }
+  input[type=text], input[type=password], select {
+    width: 100%; padding: 10px 12px; border: 1px solid var(--border);
+    border-radius: 9px; font-size: 14px; font-family: inherit; outline: none;
+    background: #fff; transition: border-color .15s, box-shadow .15s;
+  }
+  input:focus, select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(36,89,230,.12); }
+  .eye {
+    position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+    background: none; border: none; cursor: pointer; color: var(--muted);
+    font-size: 13px; padding: 4px 6px; border-radius: 5px;
+  }
+  .eye:hover { background: #eef1f7; }
+  .help { font-size: 11px; color: var(--muted); margin-top: 5px; line-height: 1.45; }
+  .btn {
+    padding: 10px 20px; border: none; border-radius: 9px; font-size: 14px;
+    font-weight: 600; cursor: pointer; transition: all .15s; white-space: nowrap;
+  }
+  .btn-primary { background: var(--primary); color: #fff; }
+  .btn-primary:hover { background: #1a44c7; }
+  .btn-primary:disabled { background: #a8b5d8; cursor: not-allowed; }
+  .btn-ghost { background: #eef1f7; color: var(--text); }
+  .btn-ghost:hover { background: #e1e6f0; }
+  .actions { display: flex; gap: 9px; margin-top: 16px; align-items: center; }
+  .saved-tag { font-size: 12px; color: var(--green); margin-left: 4px; }
+  .status { font-size: 13px; padding: 11px 14px; border-radius: 9px; margin-top: 14px; display: none; }
+  .status.show { display: block; }
+  .status.error { background: #fdeaea; color: var(--red); border: 1px solid #f5cccc; }
+  .status.info { background: #eaf1fe; color: var(--primary); border: 1px solid #cfd9f7; }
+  .spinner { display: inline-block; width: 13px; height: 13px; border: 2px solid currentColor; border-top-color: transparent; border-radius: 50%; animation: spin .7s linear infinite; vertical-align: -2px; margin-right: 6px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+  .tab {
+    padding: 8px 16px; border: 1px solid var(--border); border-radius: 20px;
+    background: var(--card); color: var(--muted); font-size: 13px; font-weight: 600;
+    cursor: pointer; transition: all .15s; white-space: nowrap;
+  }
+  .tab:hover { border-color: var(--primary); color: var(--primary); }
+  .tab.active { background: var(--primary); border-color: var(--primary); color: #fff; }
+
+  .section-title { font-size: 12px; font-weight: 700; color: var(--muted); margin: 22px 0 11px; text-transform: uppercase; letter-spacing: .6px; }
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 11px; padding: 15px; box-shadow: var(--shadow); }
+  .card .label { font-size: 12px; color: var(--muted); }
+  .card .value { font-size: 24px; font-weight: 700; margin-top: 3px; letter-spacing: -.5px; }
+  .card .value.sm { font-size: 17px; }
+
+  .level-badge { display: inline-block; font-size: 12px; padding: 4px 11px; border-radius: 20px; background: #eef1fe; color: var(--primary); font-weight: 600; margin-bottom: 12px; }
+  .quota-item { background: var(--card); border: 1px solid var(--border); border-radius: 11px; padding: 17px; box-shadow: var(--shadow); margin-bottom: 13px; }
+  .quota-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 11px; }
+  .quota-title { font-weight: 600; font-size: 15px; }
+  .quota-pct { font-size: 22px; font-weight: 700; letter-spacing: -.5px; }
+  .bar { height: 11px; background: #eef1f7; border-radius: 6px; overflow: hidden; }
+  .bar > div { height: 100%; border-radius: 6px; transition: width .5s ease; }
+  .quota-meta { display: flex; justify-content: space-between; margin-top: 10px; font-size: 13px; color: var(--muted); flex-wrap: wrap; gap: 6px 16px; }
+  .quota-meta b { color: var(--text); font-weight: 600; }
+  .countdown { color: var(--primary); font-weight: 700; }
+  .countdown.warn { color: var(--orange); }
+
+  .detail-list { background: var(--card); border: 1px solid var(--border); border-radius: 11px; box-shadow: var(--shadow); overflow: hidden; }
+  .detail-row { display: flex; justify-content: space-between; gap: 12px; padding: 10px 15px; font-size: 13px; }
+  .detail-row + .detail-row { border-top: 1px dashed var(--border); }
+  .detail-row span { color: var(--muted); }
+  .detail-row b { font-weight: 600; }
+  table.detail-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  table.detail-table th, table.detail-table td { padding: 9px 12px; text-align: left; border-bottom: 1px solid var(--border); }
+  table.detail-table th { background: #f7f9fd; color: var(--muted); font-weight: 600; font-size: 12px; white-space: nowrap; }
+  table.detail-table td { color: var(--text); }
+  .foot { text-align: center; color: var(--muted); font-size: 12px; margin-top: 30px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>多厂家额度查询</h1>
+  <div class="sub">智谱 / Z.ai · OpenCode Go · 阿里云百炼 Token Plan · 火山方舟 Coding Plan · DeepSeek。凭证仅保存在本机浏览器，经本地服务转发，不上传任何第三方。</div>
+
+  <div class="tabs" id="tabs"></div>
+
+  <div class="panel">
+    <div class="row" id="fieldsRow"></div>
+    <div class="actions">
+      <button class="btn btn-primary" id="queryBtn">查询额度</button>
+      <button class="btn btn-ghost" id="saveBtn">保存到本机</button>
+      <span class="saved-tag" id="savedTag" style="display:none;">✓ 已保存</span>
+    </div>
+    <div class="status" id="status"></div>
+  </div>
+
+  <div id="results" style="display:none;">
+    <div class="sub" id="meta"></div>
+    <div class="section-title" id="summaryTitle">额度概览</div>
+    <div class="cards" id="summaryCards"></div>
+    <div class="section-title" id="windowTitle">额度窗口</div>
+    <div id="windowArea"></div>
+    <div id="detailArea"></div>
+  </div>
+
+  <div class="foot">数据来自各厂家官方/控制台接口 · Token、Cookie、AK/SK 等凭证仅保存在本机浏览器 localStorage</div>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const pad = (n) => String(n).padStart(2, '0');
+const fmtDateTime = (d) => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+const fmtNum = (n) => Number(n || 0).toLocaleString();
+
+let PROVIDERS = [];
+let current = null; // 当前 active provider id
+let fieldEls = {};  // providerId -> { fieldKey: element }
+let tabState = {};  // providerId -> { result, status } 缓存各 Tab 查询结果，切换不丢失
+
+async function boot() {
+  const r = await fetch('/api/providers');
+  PROVIDERS = await r.json();
+  buildTabs();
+  if (PROVIDERS.length) switchTab(PROVIDERS[0].id);
+}
+
+function buildTabs() {
+  const tabs = $('tabs');
+  tabs.innerHTML = '';
+  PROVIDERS.forEach((p) => {
+    const b = document.createElement('button');
+    b.className = 'tab';
+    b.textContent = p.name;
+    b.dataset.id = p.id;
+    b.addEventListener('click', () => switchTab(p.id));
+    tabs.appendChild(b);
+  });
+}
+
+function switchTab(id) {
+  current = id;
+  document.querySelectorAll('.tab').forEach((b) => b.classList.toggle('active', b.dataset.id === id));
+  const p = PROVIDERS.find((x) => x.id === id);
+  buildFields(p);
+  // 恢复该 Tab 缓存的查询结果（若有），避免切换后需要重新查询
+  const st = tabState[id];
+  if (st && st.result) render(st.result, p);
+  else $('results').style.display = 'none';
+  if (st && st.status) showStatus(st.status.html, st.status.type);
+  else hideStatus();
+}
+
+function buildFields(p) {
+  const row = $('fieldsRow');
+  row.innerHTML = '';
+  fieldEls[p.id] = {};
+  const wraps = {}; // fieldKey -> wrap element（用于 showWhen 显隐）
+
+  const applyVisibility = () => {
+    p.fields.forEach((f) => {
+      if (!wraps[f.key]) return;
+      if (f.showWhen) {
+        const condField = f.showWhen[Object.keys(f.showWhen)[0]];
+        const condKey = Object.keys(f.showWhen)[0];
+        const el = fieldEls[p.id][condKey];
+        wraps[f.key].style.display = el && el.value === condField ? '' : 'none';
+      } else {
+        wraps[f.key].style.display = '';
+      }
+    });
+  };
+
+  p.fields.forEach((f) => {
+    const wrap = document.createElement('div');
+    wrap.className = f.type === 'select' ? 'field small' : 'field';
+    wraps[f.key] = wrap;
+
+    const label = document.createElement('label');
+    label.textContent = f.label + (f.required ? ' *' : '');
+    wrap.appendChild(label);
+
+    if (f.type === 'select') {
+      const sel = document.createElement('select');
+      (f.options || []).forEach((o) => {
+        const opt = document.createElement('option');
+        opt.value = o.value;
+        opt.textContent = o.label;
+        sel.appendChild(opt);
+      });
+      sel.addEventListener('change', applyVisibility);
+      wrap.appendChild(sel);
+      fieldEls[p.id][f.key] = sel;
+    } else {
+      const inputWrap = document.createElement('div');
+      inputWrap.className = 'input-wrap';
+      const inp = document.createElement('input');
+      inp.type = f.type === 'password' ? 'password' : 'text';
+      inp.placeholder = f.placeholder || '';
+      inp.autocomplete = 'off';
+      inp.spellcheck = false;
+      inputWrap.appendChild(inp);
+      if (f.type === 'password') {
+        const eye = document.createElement('button');
+        eye.className = 'eye';
+        eye.type = 'button';
+        eye.title = '显示/隐藏';
+        eye.textContent = '显示';
+        eye.addEventListener('click', () => {
+          if (inp.type === 'password') { inp.type = 'text'; eye.textContent = '隐藏'; }
+          else { inp.type = 'password'; eye.textContent = '显示'; }
+        });
+        inputWrap.appendChild(eye);
+      }
+      wrap.appendChild(inputWrap);
+      fieldEls[p.id][f.key] = inp;
+    }
+
+    if (f.help) {
+      const help = document.createElement('div');
+      help.className = 'help';
+      help.textContent = f.help;
+      wrap.appendChild(help);
+    }
+    row.appendChild(wrap);
+  });
+
+  // 回填保存的凭证
+  const saved = {};
+  p.fields.forEach((f) => {
+    const v = localStorage.getItem(`q_${p.id}_${f.key}`);
+    if (v != null) {
+      const el = fieldEls[p.id][f.key];
+      if (el) el.value = v;
+      saved[f.key] = true;
+    }
+  });
+  $('savedTag').style.display = Object.keys(saved).length ? 'inline' : 'none';
+
+  // 依据 select 值联动显隐
+  applyVisibility();
+
+  // Enter 键触发查询
+  p.fields.forEach((f) => {
+    const el = fieldEls[p.id][f.key];
+    if (el && el.tagName === 'INPUT') el.addEventListener('keydown', (e) => { if (e.key === 'Enter') query(); });
+  });
+}
+
+function isVisible(p, f) {
+  if (!f.showWhen) return true;
+  const condKey = Object.keys(f.showWhen)[0];
+  const el = fieldEls[p.id][condKey];
+  return !el || el.value === f.showWhen[condKey];
+}
+
+function collectCreds() {
+  const p = PROVIDERS.find((x) => x.id === current);
+  const creds = {};
+  p.fields.forEach((f) => {
+    if (!isVisible(p, f)) return;
+    const el = fieldEls[p.id][f.key];
+    creds[f.key] = el ? el.value.trim() : '';
+  });
+  return { p, creds };
+}
+
+$('saveBtn').addEventListener('click', () => {
+  const { p, creds } = collectCreds();
+  const missing = p.fields.filter((f) => f.required && isVisible(p, f) && !creds[f.key]);
+  if (missing.length) { showStatus('请先填写 ' + missing.map((f) => f.label).join('、') + ' 再保存', 'error'); return; }
+  p.fields.forEach((f) => localStorage.setItem(`q_${p.id}_${f.key}`, creds[f.key]));
+  $('savedTag').style.display = 'inline';
+  showStatus('已保存到本机，下次打开自动填入', 'info');
+});
+
+$('queryBtn').addEventListener('click', query);
+
+async function query() {
+  const { p, creds } = collectCreds();
+  const missing = p.fields.filter((f) => f.required && isVisible(p, f) && !creds[f.key]);
+  if (missing.length) { showStatus('请先填写 ' + missing.map((f) => f.label).join('、'), 'error'); return; }
+
+  $('queryBtn').disabled = true;
+  showStatus('<span class="spinner"></span>查询中…', 'info');
+
+  try {
+    const r = await fetch('/api/query', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ provider: p.id, credentials: creds }),
+    });
+    const data = await r.json();
+    if (!data.ok) throw new Error(data.error || '查询失败');
+    render(data, p);
+    hideStatus();
+    tabState[p.id] = { result: data, status: null };
+  } catch (e) {
+    const html = '查询失败：' + e.message;
+    showStatus(html, 'error');
+    $('results').style.display = 'none';
+    tabState[p.id] = { result: null, status: { html, type: 'error' } };
+  } finally {
+    $('queryBtn').disabled = false;
+  }
+}
+
+function showStatus(html, type) {
+  const s = $('status');
+  s.className = 'status show ' + type;
+  s.innerHTML = html;
+}
+function hideStatus() { $('status').className = 'status'; }
+
+function render(data, p) {
+  $('meta').textContent = `${p.name}  ·  更新于 ${fmtDateTime(new Date(data.updatedAt))}`;
+  $('results').style.display = 'block';
+
+  // summary 卡片
+  const allowed = data.summary || [];
+  $('summaryTitle').style.display = allowed.length ? 'block' : 'none';
+  $('summaryCards').innerHTML = allowed.map((c) => `
+    <div class="card"><div class="label">${c.label}</div><div class="value">${typeof c.value === 'number' ? fmtNum(c.value) : c.value}</div></div>`).join('');
+
+  // windows 进度条
+  const windows = data.windows || [];
+  $('windowTitle').style.display = windows.length ? 'block' : 'none';
+  $('windowArea').innerHTML = windows.map((w) => quotaItem(w)).join('');
+
+  // details 明细
+  const details = data.details || [];
+  $('detailArea').innerHTML = details.map((d) => detailBlock(d)).join('');
+
+  startCountdown();
+}
+
+function quotaItem(w) {
+  const usedNum = Number(w.used) || 0;
+  const totalNum = Number(w.total) || 0;
+  const pct = w.percentage != null ? Number(w.percentage)
+    : totalNum > 0 ? (usedNum / totalNum) * 100 : 0;
+  const color = pct >= 80 ? 'var(--red)' : pct >= 50 ? 'var(--orange)' : 'var(--green)';
+  const unit = w.unit || '';
+
+  // 有绝对数值 → 显示 已用/总额/剩余；只有百分比 → 显示 已用%/剩余%
+  let usedMeta;
+  if (w.total != null || w.used != null) {
+    const usedText = w.used != null ? fmtNum(w.used) : '-';
+    const totalText = w.total != null ? fmtNum(w.total) : '-';
+    const remainText = w.remaining != null ? fmtNum(w.remaining) : '-';
+    usedMeta = `<span>已用：<b>${usedText}</b> / ${totalText} ${unit}</span>
+                <span>剩余：<b>${remainText}</b> ${unit}</span>`;
+  } else if (w.percentage != null) {
+    const rem = Math.max(0, 100 - Number(w.percentage));
+    usedMeta = `<span>已用：<b>${Number(w.percentage).toFixed(1)}%</b></span>
+                <span>剩余：<b>${rem.toFixed(1)}%</b></span>`;
+  } else {
+    usedMeta = '';
+  }
+
+  let resetHTML = '';
+  if (w.resetAt) {
+    const tsMs = new Date(w.resetAt).getTime();
+    resetHTML = `<span>下次重置：<b>${fmtDateTime(new Date(w.resetAt))}</b></span>
+                 <span class="countdown" data-ts="${tsMs}">计算中…</span>`;
+  }
+
+  return `
+    <div class="quota-item">
+      <div class="quota-head">
+        <div class="quota-title">${w.label}</div>
+        <div class="quota-pct" style="color:${color}">${pct.toFixed(1)}%</div>
+      </div>
+      <div class="bar"><div style="width:${Math.min(Math.max(pct, 0), 100)}%;background:${color}"></div></div>
+      <div class="quota-meta">
+        ${usedMeta}
+        ${resetHTML}
+      </div>
+    </div>`;
+}
+
+function detailBlock(d) {
+  let body;
+  if (d.cols) {
+    // 表格：rows 为二维数组
+    const head = d.cols.map((c) => `<th>${c}</th>`).join('');
+    const trs = (d.rows || []).map((r) => `<tr>${r.map((c) => `<td>${c}</td>`).join('')}</tr>`).join('');
+    body = `<table class="detail-table"><thead><tr>${head}</tr></thead><tbody>${trs}</tbody></table>`;
+  } else {
+    // 键值对列表
+    body = (d.rows || []).map((r) => `<div class="detail-row"><span>${r[0]}</span><b>${fmtNum(r[1])}</b></div>`).join('');
+  }
+  return `<div class="section-title">${d.title}</div><div class="detail-list">${body}</div>`;
+}
+
+let cdTimer = null;
+function startCountdown() {
+  if (cdTimer) clearInterval(cdTimer);
+  const tick = () => {
+    document.querySelectorAll('.countdown').forEach((el) => {
+      const ts = Number(el.dataset.ts);
+      const diff = ts - Date.now();
+      if (diff <= 0) { el.textContent = '已到期'; el.classList.remove('warn'); return; }
+      const d = Math.floor(diff / 86400000);
+      const h = Math.floor((diff % 86400000) / 3600000);
+      const mi = Math.floor((diff % 3600000) / 60000);
+      const s = Math.floor((diff % 60000) / 1000);
+      el.textContent = '剩 ' + (d > 0 ? `${d}天 ` : '') + (h > 0 ? `${h}时 ` : '') + `${mi}分 ${s}秒`;
+      el.classList.toggle('warn', diff < 3600000 && diff > 0);
+    });
+  };
+  tick();
+  cdTimer = setInterval(tick, 1000);
+}
+
+boot();
+</script>
+</body>
+</html>

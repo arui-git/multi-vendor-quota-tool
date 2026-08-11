@@ -1,0 +1,7 @@
+# 本地工具痕迹（不入库）
+.claude/
+.playwright-mcp/
+
+# 临时/日志
+*.log
+*.tmp
