@@ -5,8 +5,9 @@ import { dirname, join } from 'path';
 import { list as listProviders, run as runProvider } from './providers/index.mjs';
 
 const PORT = 7788;
+const VERSION = '1.0.0.0';
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const HTML = readFileSync(join(__dirname, 'index.html'), 'utf-8');
+const HTML = readFileSync(join(__dirname, 'index.html'), 'utf-8').replace('__VERSION__', VERSION);
 
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, `http://127.0.0.1:${PORT}`);
@@ -14,6 +15,12 @@ const server = http.createServer(async (req, res) => {
   if (url.pathname === '/') {
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
     res.end(HTML);
+    return;
+  }
+
+  // 版本号
+  if (url.pathname === '/api/version' && req.method === 'GET') {
+    send(res, 200, { version: VERSION });
     return;
   }
 
